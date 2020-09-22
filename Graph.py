@@ -31,11 +31,15 @@ class AdjacencyListGraph:
         ''' Inserts an edge from vertex u to vertex v.'''
 
         self.adjacency_list[u].append(v)
+        if self.undirected:
+            self.adjacency_list[v].append(u)
 
     def remove_edge(self, u, v):
         ''' Removes an edge from vertex u to vertex v.'''
 
         self.adjacency_list[u].remove(v)
+        if self.undirected:
+            self.adjacency_list[v].remove(u)
 
     def has_edge(self, u, v):
         ''' Checks if there's a edge from vertex u to vertex v.'''
