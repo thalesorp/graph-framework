@@ -53,7 +53,7 @@ class AdjacencyListGraph:
         for i in range(vertex_quantity):
             if self.first_vertex == "a":
                 vertex_name = LOWERCASE_ALPHABET[i]
-            if self.first_vertex == "1":
+            elif self.first_vertex == "1":
                 vertex_name = str(i + 1)
             else:
                 vertex_name = str(i)
@@ -151,14 +151,14 @@ class AdjacencyListGraph:
 
         print(connected_components_quantity, "connected components", end="\n")
 
-    def get_vertex_minimum_cost(self, costs, mst):
+    def get_vertex_minimum_cost(self, vertices_costs, included_vertices):
         ''' Prim's algorithm auxiliar function: returns the vertex name with minimum cost.'''
 
-        minimum_value = sys.maxsize
+        minimum_value = float("inf")
 
         for vertex in self.vertices:
-            if (costs[vertex] < minimum_value) and (mst[vertex] is False):
-                minimum_value = costs[vertex]
+            if (vertices_costs[vertex] < minimum_value) and (included_vertices[vertex] is False):
+                minimum_value = vertices_costs[vertex]
                 elegible_vertex = vertex
 
         return elegible_vertex
@@ -166,54 +166,56 @@ class AdjacencyListGraph:
     def minimum_spanning_tree(self):
         ''' Prim's algorithm.'''
 
-        #inf = sys.maxsize
-        inf = float("inf")
-
         # List used to pick edge of minimum weight
-        costs = dict()
+        vertices_costs = dict()
         for vertex in self.vertices:
-            costs[vertex] = inf
-        # Making the first vertex costs 0 so that it get picked.
-        costs[self.first_vertex] = 0
+            vertices_costs[vertex] = float("inf")
+        # Making the first vertex costs 0 so that it get picked first
+        vertices_costs[self.first_vertex] = 0
 
-        # List to store current MST
+        # List to store the origin vertices of the MST solution
         origin_vertices = dict()
         for vertex in self.vertices:
             origin_vertices[vertex] = None
         origin_vertices[self.first_vertex] = -1
 
-        mst = dict()
+        # Dictionary used to check if a vertex was included or not in the MST solution
+        included_vertices = dict()
         for vertex in self.vertices:
-            mst[vertex] = False
+            included_vertices[vertex] = False
 
-        mst_cost = 0
-
-        mst_costs = dict()
+        # List used to store the origin, destination and weight of the MST solution
+        mst_costs = list()
 
 
         for _ in range(self.vertex_quantity):
 
-            vertex_minimum_cost = self.get_vertex_minimum_cost(costs, mst)
+            vertex_minimum_cost = self.get_vertex_minimum_cost(vertices_costs, included_vertices)
 
-            # Marking that this vertex was already picked.
-            mst[vertex_minimum_cost] = True
+            # Marking that this vertex was already picked
+            included_vertices[vertex_minimum_cost] = True
 
-            # Getting the adjacent vertices (and their weight) of the vertex with minimum cost.
+            # Getting the adjacent vertices (and their weights) of the vertex with minimum cost
             adjacence_vertices, adjacence_vertices_weights = self.get_adjacent_vertices_with_weights(vertex_minimum_cost)
 
-            # Iterating over the adjacent vertices and updating costs to go there.
+            # Iterating over the adjacent vertices and updating costs to go there
             for vertex, vertex_cost in zip(adjacence_vertices, adjacence_vertices_weights):
-                if (mst[vertex] is False) and (costs[vertex] > vertex_cost):
-                    costs[vertex] = vertex_cost
+                if (included_vertices[vertex] is False) and (vertices_costs[vertex] > vertex_cost):
+                    vertices_costs[vertex] = vertex_cost
                     origin_vertices[vertex] = vertex_minimum_cost
 
-            mst_cost += costs[vertex_minimum_cost]
+            mst_costs.append([vertex_minimum_cost, origin_vertices[vertex_minimum_cost], vertices_costs[vertex_minimum_cost]])
 
-            mst_costs[vertex_minimum_cost] = [costs[vertex_minimum_cost], origin_vertices[vertex_minimum_cost]]
+        '''
+        print("ORIGIN\tDEST.\tWEIGHT")
+        for i in range(1, len(mst_costs)):
+            print(mst_costs[i][0], "\t", mst_costs[i][1], "\t", mst_costs[i][2])
+        '''
 
-        #print("mst_costs:", mst_costs)
+        # Getting the total cost of the MST.
+        mst_total_cost = sum([row[2] for row in mst_costs])
 
-        return(mst_cost)
+        return(mst_total_cost)
 
 
 
@@ -255,7 +257,7 @@ def uri_2426():
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1082(): # Ok.
+def uri_1082(): # Ok
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1082
     Input:
     "N" number of tests
@@ -263,15 +265,13 @@ def uri_1082(): # Ok.
     "O D" repeated E times, which each is a connection between two edges: origin and destination
     '''
 
-    print("URI 1082")
-
     number_of_tests = input()
 
     for i in range(int(number_of_tests)):
 
         vertex_quantity, edge_quantity = input().split()
 
-        directed = True
+        directed = False
         weighted = False
         first_vertex = "a"
         graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
@@ -283,15 +283,13 @@ def uri_1082(): # Ok.
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1774(): # Ok.
+def uri_1774(): # Ok
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1774
     Input:
     "V E" number of vertices and edges
     "O D W" repeated E times, which each is a connection between two edges
     (origin and destination) and their weights.
     '''
-
-    #print("URI 1774")
 
     vertex_quantity, edge_quantity = input().split()
 
@@ -304,11 +302,10 @@ def uri_1774(): # Ok.
         origin, destination, weight = input().split()
         graph.insert_edge(origin, destination, int(weight))
 
-    #print(graph)
-
-    #print(graph.minimum_spanning_tree())
+    print(graph.minimum_spanning_tree())
 
     '''
+    DEBUG
     print("URI 1774")
 
     vertex_quantity = 7
@@ -332,35 +329,38 @@ def uri_1774(): # Ok.
     graph.insert_edge("5", "7", 15)
     graph.insert_edge("6", "7", 5)
 
-    print(graph)
+    print(graph.minimum_spanning_tree())
     '''
 
-    print(graph.minimum_spanning_tree())
-
-def uri_2127():
+def uri_2127(): # Ok, but "Runtime error"
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2127
     Input:
     "V E" number of vertices and edges
     "O D W" repeated E times, which each is a connection between two edges (origin and destination) and their weights.
     '''
-    print("URI 2127")
+
+    instance = 0
 
     input_str = input()
-    while input_str != "\n":
+    while input_str is not "":
 
         vertex_quantity, edge_quantity = input_str.split()
 
         directed = False
         weighted = True
-        graph = AdjacencyListGraph(directed, weighted, int(vertex_quantity))
+        first_vertex = "1"
+        graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
 
         for _ in range(int(edge_quantity)):
             origin, destination, weight = input().split()
-            #graph.insert_edge(origin, destination, weight)
+            graph.insert_edge(origin, destination, int(weight))
+
+        instance += 1
+        print("Instancia", instance)
+        print(graph.minimum_spanning_tree())
+        print()
 
         input_str = input()
-
-        # Call solving algorithm here
 
 def uri_2485():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2485'''
@@ -369,10 +369,8 @@ def uri_2485():
 
     return
 
-def uri_1152(): # Ok.
+def uri_1152(): # Ok, but "Time limit exceeded"
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1152'''
-
-    print("URI 1152")
 
     vertex_quantity, edge_quantity = input().split()
 
@@ -380,16 +378,19 @@ def uri_1152(): # Ok.
 
         directed = False
         weighted = True
-        vertex_naming_convention = "0"
-        graph = AdjacencyListGraph(directed, weighted, vertex_naming_convention, int(vertex_quantity))
+        first_vertex = "0"
+        graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
+
+        total_cost = 0
 
         for _ in range(int(edge_quantity)):
             origin, destination, weight = input().split()
             graph.insert_edge(origin, destination, int(weight))
+            total_cost += int(weight)
 
         vertex_quantity, edge_quantity = input().split()
 
-        print(graph.minimum_spanning_tree())
+        print(total_cost - graph.minimum_spanning_tree())
 
 # DEBUG
 def debug():
@@ -397,10 +398,10 @@ def debug():
     #print("DEBUGGING...")
 
     #uri_2426()
-    #uri_1081() # Ok.
-    uri_1774()
-    #uri_2127()
+    #uri_1082() # Ok, but "Wrong answer (100%)"
+    #uri_1774() # Ok
+    uri_2127() # Ok, but "Runtime error"
     #uri_2485()
-    #uri_1152() #Ok.
+    #uri_1152()  # Ok, but "Time limit exceeded"
 
 debug()
