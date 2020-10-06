@@ -231,33 +231,38 @@ class AdjacencyListGraph:
 
 # URI problems
 def uri_2426():
-    '''https://www.urionlinejudge.com.br/judge/en/problems/view/2426
-    Input:
-    "N" number of tests
-    "V E" number of vertices and edges
-    "O D" repeated E times, which each is a connection between two edges: origin and destination
+    '''https://www.urionlinejudge.com.br/judge/en/problems/view/2426'''
+
+    '''
+    A primeira linha da entrada contém quatro inteiros:
+        N (2 ≤ N ≤ 500),
+        E,
+        S (0 ≤ E, S ≤ N − 1),
+        M (1 ≤ M ≤ 2000),
+    indicando, respectivamente:
+        o número de rotatórias (numeradas de 0 a N − 1),
+        o número da rotatória de entrada do ônibus,
+        o número da rotatória de saída do ônibus e
+        o número de ruas da cidade.
     '''
 
-    print("URI 2426")
+    vertex_quantity, entry, way_out, edge_quantity = input().split()
 
-    number_of_tests = input()
 
-    for i in range(int(number_of_tests)):
+    directed = True
+    weighted = True
+    first_vertex = "0"
+    graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
 
-        vertex_quantity, edge_quantity = input().split()
 
-        directed = True
-        weighted = False
-        graph = AdjacencyListGraph(directed, weighted, int(vertex_quantity))
+    for _ in range(int(edge_quantity)):
+        origin, destination, weight = input().split()
+        graph.insert_edge(origin, destination, int(weight))
 
-        for _ in range(int(edge_quantity)):
-            origin, destination = input().split()
-            graph.insert_edge(origin, destination)
+    print(graph)
+    # Call solving algorithm here.
 
-        print("Case #" + str(i+1) + ":")
-        graph.connected_components()
-
-def uri_1082(): # Ok
+def uri_1082(): # Ok, but "Wrong answer (100%)"
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1082
     Input:
     "N" number of tests
@@ -342,7 +347,7 @@ def uri_2127(): # Ok, but "Runtime error"
     instance = 0
 
     input_str = input()
-    while input_str is not "":
+    while input_str != "":
 
         vertex_quantity, edge_quantity = input_str.split()
 
@@ -367,7 +372,23 @@ def uri_2485():
 
     print("URI 2485")
 
-    return
+    number_of_tests = input()
+
+    for i in range(int(number_of_tests)):
+
+        vertex_quantity, edge_quantity = input().split()
+
+        directed = False
+        weighted = False
+        first_vertex = "a"
+        graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
+
+        for _ in range(int(edge_quantity)):
+            origin, destination = input().split()
+            graph.insert_edge(origin, destination)
+
+        print("Case #" + str(i+1) + ":")
+        graph.connected_components()
 
 def uri_1152(): # Ok, but "Time limit exceeded"
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1152'''
@@ -397,10 +418,10 @@ def debug():
 
     #print("DEBUGGING...")
 
-    #uri_2426()
+    uri_2426()
     #uri_1082() # Ok, but "Wrong answer (100%)"
     #uri_1774() # Ok
-    uri_2127() # Ok, but "Runtime error"
+    #uri_2127() # Ok, but "Runtime error"
     #uri_2485()
     #uri_1152()  # Ok, but "Time limit exceeded"
 
