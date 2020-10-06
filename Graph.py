@@ -24,20 +24,22 @@ class AdjacencyListGraph:
 
     ''' A graph abstract data type using adjacency list representation'''
 
-    def __init__(self, directed, weighted, vertex_naming_convention, vertex_quantity=None):
+    def __init__(self, directed, weighted, first_vertex, vertex_quantity=None):
         ''' "directed" and "weight" MUST be boolean.
-        "vertex_naming_convention" cvan be "l" for lowercase letters, or "n" for numbers.'''
+        "first_vertex" can be "a" for lowercase letters,
+        "0" or for numbers starting from zero, and "1" for start counting from one.'''
 
         self.undirected = not directed
         self.weighted = weighted
         self.vertex_quantity = None
+        self.first_vertex = first_vertex
 
         self.edges = dict()
 
+        self.vertices = list()
+
         if self.weighted:
             self.weights = dict()
-
-        self.vertex_naming_convention = vertex_naming_convention.lower()
 
         if vertex_quantity is not None:
             self.set_vertex_quantity(vertex_quantity)
@@ -49,16 +51,19 @@ class AdjacencyListGraph:
         self.vertex_quantity = vertex_quantity
 
         for i in range(vertex_quantity):
-            if self.vertex_naming_convention == LETTERS:
+            if self.first_vertex == "a":
                 vertex_name = LOWERCASE_ALPHABET[i]
-
-            if self.vertex_naming_convention == NUMBERS:
-                vertex_name = i
+            if self.first_vertex == "1":
+                vertex_name = str(i + 1)
+            else:
+                vertex_name = str(i)
 
             self.edges[vertex_name] = []
 
             if self.weighted:
                 self.weights[vertex_name] = []
+
+            self.vertices.append(vertex_name)
 
     def insert_edge(self, origin, destination, weight=None):
         ''' Inserts an edge from vertex origin to vertex destination.'''
@@ -66,6 +71,11 @@ class AdjacencyListGraph:
         self.edges[origin].append(destination)
         if self.weighted:
             self.weights[origin].append(weight)
+
+        if self.undirected:
+            self.edges[destination].append(origin)
+            if self.weighted:
+                self.weights[destination].append(weight)
 
     def has_edge(self, origin, destination):
         ''' Checks if there's a edge from vertex origin to vertex destination.'''
@@ -98,13 +108,16 @@ class AdjacencyListGraph:
     def get_adjacent_vertices(self, vertex):
         ''' Return a list containing all adjacent vertices of "vertex".'''
 
-        adjacent_vertices = self.edges[vertex]
-
-        for origin_vertex, destination_vertex_list in self.edges.items():
-            if vertex in destination_vertex_list:
-                adjacent_vertices.append(origin_vertex)
-
+        adjacent_vertices = list(self.edges[vertex])
         return adjacent_vertices
+
+    def get_adjacent_vertices_with_weights(self, vertex):
+        ''' Return two lists: one containing all adjacent vertices of "vertex",
+        and another with their respectives weights.'''
+
+        adjacent_vertices = list(self.edges[vertex])
+        adjacent_vertices_weights = list(self.weights[vertex])
+        return adjacent_vertices, adjacent_vertices_weights
 
     # Useful algorithms
     def depth_first_search(self, visited, vertex):
@@ -143,11 +156,8 @@ class AdjacencyListGraph:
 
         minimum_value = sys.maxsize
 
-        for vertex in self.edges.keys():
-            if self.vertex_naming_convention == LETTERS:
-                vertex = LOWERCASE_ALPHABET.index(vertex)
-
-            if costs[vertex] < minimum_value and vertex not in mst:
+        for vertex in self.vertices:
+            if (costs[vertex] < minimum_value) and (mst[vertex] is False):
                 minimum_value = costs[vertex]
                 elegible_vertex = vertex
 
@@ -156,46 +166,64 @@ class AdjacencyListGraph:
     def minimum_spanning_tree(self):
         ''' Prim's algorithm.'''
 
-        '''
-        Q: Vértices que ainda não fazem parte da AGM parcial
-        (ainda não fazem parte do conjunto X);
+        #inf = sys.maxsize
+        inf = float("inf")
 
-        chave[u]: peso da aresta mais leve do vértice u que a conecta à AGM
-        parcialmente construída;
+        # List used to pick edge of minimum weight
+        costs = dict()
+        for vertex in self.vertices:
+            costs[vertex] = inf
+        # Making the first vertex costs 0 so that it get picked.
+        costs[self.first_vertex] = 0
 
-        π[u]: vértice pai do vértice u;
-        '''
+        # List to store current MST
+        origin_vertices = dict()
+        for vertex in self.vertices:
+            origin_vertices[vertex] = None
+        origin_vertices[self.first_vertex] = -1
 
-        inf = sys.maxsize
+        mst = dict()
+        for vertex in self.vertices:
+            mst[vertex] = False
 
-        mst = list()
         mst_cost = 0
 
-        costs = [inf] * self.vertex_quantity
-        costs[0] = 0
+        mst_costs = dict()
 
-        for i in range(self.vertex_quantity):
-            #print("\nInter:", i)
+
+        for _ in range(self.vertex_quantity):
 
             vertex_minimum_cost = self.get_vertex_minimum_cost(costs, mst)
-            #print("vertex_minimum_cost:", vertex_minimum_cost)
 
-            #mst.append([vertex_minimum_cost, costs[vertex_minimum_cost]])
+            # Marking that this vertex was already picked.
+            mst[vertex_minimum_cost] = True
 
-            #print("vertex_minimum_cost:", vertex_minimum_cost)
-            mst.append(vertex_minimum_cost)
+            # Getting the adjacent vertices (and their weight) of the vertex with minimum cost.
+            adjacence_vertices, adjacence_vertices_weights = self.get_adjacent_vertices_with_weights(vertex_minimum_cost)
+
+            # Iterating over the adjacent vertices and updating costs to go there.
+            for vertex, vertex_cost in zip(adjacence_vertices, adjacence_vertices_weights):
+                if (mst[vertex] is False) and (costs[vertex] > vertex_cost):
+                    costs[vertex] = vertex_cost
+                    origin_vertices[vertex] = vertex_minimum_cost
+
             mst_cost += costs[vertex_minimum_cost]
 
-            destinations = self.edges[vertex_minimum_cost]
-            destinations_costs = self.weights[vertex_minimum_cost]
+            mst_costs[vertex_minimum_cost] = [costs[vertex_minimum_cost], origin_vertices[vertex_minimum_cost]]
 
-            # Updating the costs list with the costs of the vertices connected
-            # to the vertex with minimum cost picked.
-            for i in range(len(destinations)):
-                if costs[destinations[i]] > destinations_costs[i]:
-                    costs[destinations[i]] = destinations_costs[i]
+        #print("mst_costs:", mst_costs)
 
         return(mst_cost)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -207,6 +235,8 @@ def uri_2426():
     "V E" number of vertices and edges
     "O D" repeated E times, which each is a connection between two edges: origin and destination
     '''
+
+    print("URI 2426")
 
     number_of_tests = input()
 
@@ -225,13 +255,15 @@ def uri_2426():
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1081(): # Ok.
+def uri_1082(): # Ok.
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1082
     Input:
     "N" number of tests
     "V E" number of vertices and edges
     "O D" repeated E times, which each is a connection between two edges: origin and destination
     '''
+
+    print("URI 1082")
 
     number_of_tests = input()
 
@@ -241,8 +273,8 @@ def uri_1081(): # Ok.
 
         directed = True
         weighted = False
-        vertex_naming_convention = "l"
-        graph = AdjacencyListGraph(directed, weighted, vertex_naming_convention, int(vertex_quantity))
+        first_vertex = "a"
+        graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
 
         for _ in range(int(edge_quantity)):
             origin, destination = input().split()
@@ -251,7 +283,7 @@ def uri_1081(): # Ok.
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1774():
+def uri_1774(): # Ok.
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1774
     Input:
     "V E" number of vertices and edges
@@ -259,20 +291,51 @@ def uri_1774():
     (origin and destination) and their weights.
     '''
 
-    print("URI 1774")
+    #print("URI 1774")
 
     vertex_quantity, edge_quantity = input().split()
 
     directed = False
     weighted = True
-    #graph = AdjacencyListGraph(directed, weighted, int(vertex_quantity))
-    graph = AdjacencyMatrixGraph(directed, weighted, int(vertex_quantity))
+    first_vertex = "1"
+    graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
 
     for _ in range(int(edge_quantity)):
         origin, destination, weight = input().split()
-        graph.insert_edge(origin, destination, weight)
+        graph.insert_edge(origin, destination, int(weight))
 
-    graph.connected_components()
+    #print(graph)
+
+    #print(graph.minimum_spanning_tree())
+
+    '''
+    print("URI 1774")
+
+    vertex_quantity = 7
+    edge_quantity = 12
+
+    directed = False
+    weighted = True
+    first_vertex = "1"
+    graph = AdjacencyListGraph(directed, weighted, first_vertex, int(vertex_quantity))
+
+    graph.insert_edge("1", "3", 6)
+    graph.insert_edge("1", "4", 9)
+    graph.insert_edge("2", "3", 17)
+    graph.insert_edge("2", "5", 32)
+    graph.insert_edge("2", "7", 27)
+    graph.insert_edge("3", "4", 11)
+    graph.insert_edge("3", "5", 4)
+    graph.insert_edge("4", "5", 3)
+    graph.insert_edge("4", "6", 19)
+    graph.insert_edge("5", "6", 13)
+    graph.insert_edge("5", "7", 15)
+    graph.insert_edge("6", "7", 5)
+
+    print(graph)
+    '''
+
+    print(graph.minimum_spanning_tree())
 
 def uri_2127():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2127
@@ -301,10 +364,14 @@ def uri_2127():
 
 def uri_2485():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2485'''
+
+    print("URI 2485")
+
     return
 
 def uri_1152(): # Ok.
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1152'''
+
     print("URI 1152")
 
     vertex_quantity, edge_quantity = input().split()
@@ -313,57 +380,27 @@ def uri_1152(): # Ok.
 
         directed = False
         weighted = True
-        vertex_naming_convention = "n"
+        vertex_naming_convention = "0"
         graph = AdjacencyListGraph(directed, weighted, vertex_naming_convention, int(vertex_quantity))
 
         for _ in range(int(edge_quantity)):
             origin, destination, weight = input().split()
-            graph.insert_edge(int(origin), int(destination), int(weight))
+            graph.insert_edge(origin, destination, int(weight))
 
         vertex_quantity, edge_quantity = input().split()
 
-        # Call solving algorithm here
         print(graph.minimum_spanning_tree())
 
 # DEBUG
 def debug():
 
-    print("DEBUGGING...")
+    #print("DEBUGGING...")
 
-    directed = False
-    weighted = True
-    vertex_quantity = 9
-    vertex_naming_convention = "n"
-    g = AdjacencyListGraph(directed, weighted, vertex_naming_convention, vertex_quantity)
+    #uri_2426()
+    #uri_1081() # Ok.
+    uri_1774()
+    #uri_2127()
+    #uri_2485()
+    #uri_1152() #Ok.
 
-    g.insert_edge(0, 1, 4)
-    g.insert_edge(0, 7, 8)
-
-    g.insert_edge(1, 2, 8)
-    g.insert_edge(1, 7, 11)
-
-    g.insert_edge(2, 3, 7)
-    g.insert_edge(2, 5, 4)
-    g.insert_edge(2, 8, 2)
-
-    g.insert_edge(3, 4, 9)
-    g.insert_edge(3, 5, 14)
-
-    g.insert_edge(4, 5, 10)
-
-    g.insert_edge(5, 6, 2)
-
-    g.insert_edge(6, 7, 1)
-    g.insert_edge(6, 8, 6)
-
-    g.insert_edge(7, 8, 7)
-
-    g.minimum_spanning_tree()
-
-#uri_2426()
-#uri_1081() # Ok.
-#uri_1774()
-#uri_2127()
-#uri_2485()
-#uri_1152() #Ok.
-#debug()
+debug()
