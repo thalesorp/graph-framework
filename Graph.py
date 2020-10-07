@@ -17,8 +17,6 @@ import sys
 from operator import itemgetter
 
 LOWERCASE_ALPHABET = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-LETTERS = "l"
-NUMBERS = "n"
 
 class AdjacencyListGraph:
 
@@ -34,9 +32,9 @@ class AdjacencyListGraph:
         self.vertex_quantity = None
         self.first_vertex = first_vertex
 
-        self.edges = dict()
-
         self.vertices = list()
+
+        self.edges = dict()
 
         if self.weighted:
             self.weights = dict()
@@ -187,7 +185,6 @@ class AdjacencyListGraph:
         # List used to store the origin, destination and weight of the MST solution
         mst_costs = list()
 
-
         for _ in range(self.vertex_quantity):
 
             vertex_minimum_cost = self.get_vertex_minimum_cost(vertices_costs, included_vertices)
@@ -212,24 +209,18 @@ class AdjacencyListGraph:
             print(mst_costs[i][0], "\t", mst_costs[i][1], "\t", mst_costs[i][2])
         '''
 
-        # Getting the total cost of the MST.
+        # Adding all the costs of MST to get the total cost.
         mst_total_cost = sum([row[2] for row in mst_costs])
 
-        return(mst_total_cost)
+        return mst_total_cost
 
 
+################################################################################
+#                                                                              #
+# URI problems                                                                 #
+#                                                                              #
+################################################################################
 
-
-
-
-
-
-
-
-
-
-
-# URI problems
 def uri_2426():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2426'''
 
@@ -262,7 +253,7 @@ def uri_2426():
     print(graph)
     # Call solving algorithm here.
 
-def uri_1082(): # Ok, but "Wrong answer (100%)"
+def uri_1082():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1082
     Input:
     "N" number of tests
@@ -288,7 +279,7 @@ def uri_1082(): # Ok, but "Wrong answer (100%)"
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1774(): # Ok
+def uri_1774():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1774
     Input:
     "V E" number of vertices and edges
@@ -337,7 +328,7 @@ def uri_1774(): # Ok
     print(graph.minimum_spanning_tree())
     '''
 
-def uri_2127(): # Ok, but "Runtime error"
+def uri_2127():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/2127
     Input:
     "V E" number of vertices and edges
@@ -390,7 +381,7 @@ def uri_2485():
         print("Case #" + str(i+1) + ":")
         graph.connected_components()
 
-def uri_1152(): # Ok, but "Time limit exceeded"
+def uri_1152():
     '''https://www.urionlinejudge.com.br/judge/en/problems/view/1152'''
 
     vertex_quantity, edge_quantity = input().split()
@@ -415,14 +406,11 @@ def uri_1152(): # Ok, but "Time limit exceeded"
 
 # DEBUG
 def debug():
-
-    #print("DEBUGGING...")
-
     uri_2426()
     #uri_1082() # Ok, but "Wrong answer (100%)"
     #uri_1774() # Ok
     #uri_2127() # Ok, but "Runtime error"
     #uri_2485()
-    #uri_1152()  # Ok, but "Time limit exceeded"
+    #uri_1152() # Ok, but "Time limit exceeded"
 
 debug()
